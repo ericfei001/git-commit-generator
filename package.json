@@ -1,0 +1,77 @@
+{
+    "name": "ai-commit-assistant",
+    "displayName": "AI Commit Assistant",
+    "description": "Generate commit messages using local Ollama models.",
+    "version": "0.1.0",
+    "publisher": "eric",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ericfei001/git-commit-generator.git"
+    },
+    "engines": {
+        "vscode": "^1.85.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "keywords": [
+        "git",
+        "commit",
+        "ai",
+        "ollama",
+        "llama"
+    ],
+    "license": "MIT",
+    "icon": "icon.png",
+    "main": "./out/extension.js",
+    "scripts": {
+        "vscode:prepublish": "yarn run compile",
+        "compile": "tsc -p . && mkdir -p out/webview && cp src/webview/*.html out/webview/",
+        "watch": "tsc -w -p .",
+        "pretest": "yarn run compile"
+    },
+    "contributes": {
+        "commands": [
+            {
+                "command": "aiCommit.openPanel",
+                "title": "AI Commit Assistant: Open",
+                "icon": "$(git-commit)"
+            }
+        ],
+        "viewsContainers": {
+            "activitybar": [
+                {
+                    "id": "aiCommit",
+                    "title": "AI Commit",
+                    "icon": "$(git-commit)"
+                }
+            ]
+        },
+        "views": {
+            "aiCommit": [
+                {
+                    "id": "aiCommit.panel",
+                    "name": "Commit Assistant",
+                    "type": "webview",
+                    "icon": "$(git-commit)"
+                }
+            ]
+        },
+        "configuration": {
+            "type": "object",
+            "title": "AI Commit Assistant",
+            "properties": {
+                "aiCommit.defaultModel": {
+                    "type": "string",
+                    "default": "llama3.2",
+                    "description": "Default Ollama model to use (llama3.2, deepseek-r1:1.5b, etc.)."
+                }
+            }
+        }
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.85.0",
+        "typescript": "^5.3.0"
+    }
+}

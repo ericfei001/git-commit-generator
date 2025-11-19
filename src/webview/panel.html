@@ -1,0 +1,160 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Commit Assistant</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding: 16px; }
+textarea { width: 100%; height: 120px; font-family: monospace; }
+select, button { margin-right: 8px; }
+.row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.muted { color: #666; font-size: 12px }
+</style>
+</head>
+<body>
+<h2>AI Commit Assistant</h2>
+
+<div class="row">
+<label>Provider:</label>
+<span id="providerDisplay" style="font-weight: bold;">Loading...</span>
+<span class="muted" style="margin-left: 8px;">(Configure in sidebar)</span>
+</div>
+
+<div class="row">
+<label>Diff scope:</label>
+<select id="diffScope">
+<option value="staged">Staged (git add)</option>
+<option value="unstaged">Unstaged</option>
+</select>
+
+<label>Model:</label>
+<select id="modelSelect">
+<option value="">Loading...</option>
+</select>
+
+<button id="loadDiff">Load diff</button>
+</div>
+
+<div>
+<label>Custom Instructions (optional):</label>
+<textarea id="customInstructions" placeholder="e.g., Use imperative mood, keep it under 50 chars, add emoji..." style="height: 60px;"></textarea>
+</div>
+
+<div>
+<label>Diff:</label>
+<textarea id="diffArea" readonly></textarea>
+</div>
+
+
+<div style="margin-bottom: 8px;">
+<button id="generate" style="width: 100%; padding: 8px; font-size: 14px;">Generate Commit Message</button>
+</div>
+
+<div>
+<label>Suggested commit:</label>
+<textarea id="commitArea" placeholder="Generated commit message will appear here..."></textarea>
+</div>
+
+<div class="row">
+<button id="insertTerminal">Insert into Terminal</button>
+<button id="doCommit">Commit</button>
+<button id="copy">Copy</button>
+<span class="muted" id="status"></span>
+</div>
+
+
+<script>
+const vscode = acquireVsCodeApi();
+
+// Load initial config and models
+vscode.postMessage({ command: 'getConfig' });
+vscode.postMessage({ command: 'getModels' });
+
+document.getElementById('loadDiff').addEventListener('click', () => {
+const scope = document.getElementById('diffScope').value;
+vscode.postMessage({ command: 'getDiff', type: scope });
+setStatus('Loading diff...');
+});
+
+
+document.getElementById('generate').addEventListener('click', () => {
+const diff = document.getElementById('diffArea').value;
+const model = document.getElementById('modelSelect').value || undefined;
+const customInstructions = document.getElementById('customInstructions').value;
+if (!diff.trim()) return setStatus('No diff loaded');
+document.getElementById('commitArea').value = 'Generating...';
+setStatus('Generating...');
+vscode.postMessage({ command: 'generate', diff, model, customInstructions });
+});
+
+
+document.getElementById('insertTerminal').addEventListener('click', () => {
+  const text = document.getElementById('commitArea').value;
+  vscode.postMessage({ command: 'insertTerminal', text });
+});
+
+document.getElementById('doCommit').addEventListener('click', () => {
+  const text = document.getElementById('commitArea').value;
+  if (!text.trim()) return setStatus('No commit message');
+  vscode.postMessage({ command: 'commit', text });
+  setStatus('Committing...');
+});
+
+document.getElementById('copy').addEventListener('click', () => {
+  const text = document.getElementById('commitArea').value;
+  navigator.clipboard.writeText(text);
+  setStatus('Copied to clipboard!');
+});
+
+function setStatus(t){ document.getElementById('status').textContent = t }
+
+window.addEventListener('message', event => {
+  const msg = event.data;
+  switch (msg.command) {
+    case 'diffResult':
+      document.getElementById('diffArea').value = msg.diff;
+      setStatus('Diff loaded');
+      break;
+    case 'generateResult':
+      document.getElementById('commitArea').value = msg.commit;
+      setStatus('Generated!');
+      break;
+    case 'generateStream':
+      const commitArea = document.getElementById('commitArea');
+      if (msg.isStart) {
+        commitArea.value = '';
+      }
+      commitArea.value += msg.chunk;
+      if (msg.isDone) {
+        setStatus('Generated!');
+      }
+      break;
+    case 'commitResult':
+      if (msg.success) {
+        setStatus('Committed successfully!');
+      } else {
+        setStatus('Commit failed: ' + msg.error);
+      }
+      break;
+    case 'modelsResult':
+      const select = document.getElementById('modelSelect');
+      select.innerHTML = '';
+      if (msg.models && msg.models.length > 0) {
+        msg.models.forEach(model => {
+          const option = document.createElement('option');
+          option.value = model;
+          option.textContent = model;
+          select.appendChild(option);
+        });
+      } else {
+        select.innerHTML = '<option value="">No models found</option>';
+      }
+      break;
+    case 'configResult':
+      const providerDisplay = document.getElementById('providerDisplay');
+      const providerText = msg.config.provider.charAt(0).toUpperCase() + msg.config.provider.slice(1);
+      providerDisplay.textContent = providerText;
+      break;
+  }
+});

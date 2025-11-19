@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <style>
+            body {
+                padding: 10px;
+                font-family: var(--vscode-font-family);
+                color: var(--vscode-foreground);
+            }
+
+            .section {
+                margin-bottom: 15px;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-weight: 600;
+                font-size: 12px;
+            }
+
+            textarea {
+                width: 100%;
+                min-height: 80px;
+                padding: 8px;
+                background: var(--vscode-input-background);
+                color: var(--vscode-input-foreground);
+                border: 1px solid var(--vscode-input-border);
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family);
+                font-size: 13px;
+                resize: vertical;
+                box-sizing: border-box;
+            }
+
+            #resultArea {
+                min-height: 120px;
+                background: var(--vscode-editor-background);
+            }
+
+            button {
+                width: 100%;
+                padding: 8px;
+                margin-bottom: 8px;
+                background: var(--vscode-button-background);
+                color: var(--vscode-button-foreground);
+                border: none;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 13px;
+            }
+
+            button:hover {
+                background: var(--vscode-button-hoverBackground);
+            }
+
+            button:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .status {
+                font-size: 11px;
+                color: var(--vscode-descriptionForeground);
+                margin-top: 5px;
+            }
+
+            .settings {
+                padding: 10px;
+                background: var(--vscode-editor-background);
+                border-radius: 3px;
+                margin-bottom: 15px;
+            }
+
+            .settings-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+
+            .settings-label {
+                font-size: 12px;
+            }
+
+            .settings-value {
+                font-size: 12px;
+                color: var(--vscode-descriptionForeground);
+            }
+
+            .link-button {
+                background: none;
+                color: var(--vscode-textLink-foreground);
+                text-decoration: underline;
+                padding: 0;
+                cursor: pointer;
+                font-size: 12px;
+            }
+
+            .info-box {
+                background: var(--vscode-editor-background);
+                border: 1px solid var(--vscode-input-border);
+                border-radius: 4px;
+                padding: 12px;
+                margin-bottom: 15px;
+                font-size: 12px;
+            }
+
+            .info-title {
+                font-weight: 600;
+                margin-bottom: 8px;
+                font-size: 13px;
+            }
+
+            .info-content {
+                color: var(--vscode-descriptionForeground);
+                line-height: 1.5;
+            }
+
+            .info-content ul {
+                margin: 8px 0;
+                padding-left: 20px;
+            }
+
+            .info-content li {
+                margin: 4px 0;
+            }
+
+            .info-content code {
+                background: var(--vscode-textCodeBlock-background);
+                padding: 2px 4px;
+                border-radius: 3px;
+                font-family: var(--vscode-editor-font-family);
+            }
+
+            .example {
+                background: var(--vscode-textCodeBlock-background);
+                padding: 8px;
+                border-radius: 3px;
+                margin-top: 8px;
+                font-family: var(--vscode-editor-font-family);
+                font-size: 11px;
+                line-height: 1.6;
+            }
+
+            .warning-banner {
+                background: var(--vscode-inputValidation-warningBackground);
+                border: 1px solid var(--vscode-inputValidation-warningBorder);
+                border-radius: 4px;
+                padding: 12px;
+                margin-bottom: 15px;
+            }
+
+            .warning-content {
+                display: flex;
+                gap: 10px;
+                align-items: flex-start;
+            }
+
+            .warning-icon {
+                font-size: 20px;
+                flex-shrink: 0;
+            }
+
+            .warning-content strong {
+                display: block;
+                margin-bottom: 4px;
+                color: var(--vscode-inputValidation-warningForeground);
+            }
+
+            .warning-content p {
+                margin: 4px 0;
+                font-size: 12px;
+                color: var(--vscode-foreground);
+            }
+
+            .warning-link {
+                color: var(--vscode-textLink-foreground);
+                text-decoration: underline;
+            }
+
+            .collapsible-header {
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+
+            .collapsible-header::before {
+                content: '▼';
+                font-size: 10px;
+                transition: transform 0.2s;
+            }
+
+            .collapsible-header.collapsed::before {
+                transform: rotate(-90deg);
+            }
+
+            .collapsible-content {
+                max-height: 1000px;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+
+            .collapsible-content.collapsed {
+                max-height: 0;
+            }
+
+            #diffArea {
+                min-height: 100px;
+                max-height: 300px;
+                font-family: var(--vscode-editor-font-family);
+                font-size: 12px;
+                white-space: pre;
+                overflow: auto;
+            }
+
+            .button-group {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 8px;
+            }
+
+            .button-group button {
+                flex: 1;
+                margin-bottom: 0;
+            }
+
+            .secondary-button {
+                background: var(--vscode-button-secondaryBackground);
+                color: var(--vscode-button-secondaryForeground);
+            }
+
+            .secondary-button:hover {
+                background: var(--vscode-button-secondaryHoverBackground);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="settings">
+            <div class="settings-item">
+                <span class="settings-label">Model:</span>
+                <button class="link-button" id="changeModel">
+                    <span id="currentModel">Loading...</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="section">
+            <label for="instructionArea">Custom Instructions (optional)</label>
+            <textarea
+                id="instructionArea"
+                placeholder="e.g., Use Chinese, add emoji, keep under 50 chars..."
+            ></textarea>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title collapsible-header" id="rulesToggle">📝 Git Commit Format Guide</div>
+            <div class="info-content collapsible-content" id="rulesContent">
+                <strong>Format:</strong> &lt;type&gt;[scope]: &lt;description&gt; <br /><br />
+                <strong>Types:</strong>
+                <ul>
+                    <li><code>feat</code>: New feature</li>
+                    <li><code>fix</code>: Bug fix</li>
+                    <li><code>docs</code>: Documentation</li>
+                    <li><code>refactor</code>: Code restructuring</li>
+                    <li><code>test</code>: Add/update tests</li>
+                    <li><code>chore</code>: Maintenance tasks</li>
+                </ul>
+                <strong>Rules:</strong>
+                <ul>
+                    <li>Use imperative mood</li>
+                    <li>Capitalize first letter</li>
+                    <li>No period at end</li>
+                    <li>Keep under 72 characters</li>
+                </ul>
+                <strong>Example:</strong>
+                <div class="example">
+                    1. feat: Add user authentication<br />
+                    2. fix: Resolve login timeout issue<br />
+                    3. docs: Update API documentation
+                </div>
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button id="loadDiffBtn" class="secondary-button">📄 Load Diff</button>
+            <button id="generateBtn">✨ Generate</button>
+        </div>
+
+        <div class="section">
+            <label for="diffArea">Staged Changes (Diff)</label>
+            <textarea id="diffArea" placeholder="Click 'Load Diff' to view staged changes..." readonly></textarea>
+        </div>
+
+        <div class="section">
+            <label for="resultArea">Generated Message</label>
+            <textarea id="resultArea" placeholder="Click Generate to create commit message..." readonly></textarea>
+            <div class="status" id="statusText"></div>
+        </div>
+
+        <button id="insertBtn" disabled>📋 Insert to New Terminal</button>
+        <button id="commitBtn" disabled>✅ Commit Now</button>
+
+        <script>
+            const vscode = acquireVsCodeApi();
+
+            // Load saved state
+            const state = vscode.getState() || {};
+            if (state.instructions) {
+                document.getElementById('instructionArea').value = state.instructions;
+            }
+            if (state.result) {
+                document.getElementById('resultArea').value = state.result;
+                enableButtons();
+            }
+
+            // Save instructions on change
+            document.getElementById('instructionArea').addEventListener('input', (e) => {
+                const currentState = vscode.getState() || {};
+                currentState.instructions = e.target.value;
+                vscode.setState(currentState);
+            });
+
+            // Collapsible sections
+            document.getElementById('rulesToggle').addEventListener('click', () => {
+                const content = document.getElementById('rulesContent');
+                const header = document.getElementById('rulesToggle');
+                content.classList.toggle('collapsed');
+                header.classList.toggle('collapsed');
+            });
+
+            document.getElementById('changeModel').addEventListener('click', () => {
+                vscode.postMessage({ command: 'changeModel' });
+            });
+
+            document.getElementById('loadDiffBtn').addEventListener('click', () => {
+                document.getElementById('diffArea').value = 'Loading...';
+                vscode.postMessage({ command: 'loadDiff' });
+            });
+
+            document.getElementById('generateBtn').addEventListener('click', () => {
+                const instructions = document.getElementById('instructionArea').value;
+                document.getElementById('resultArea').value = 'Generating...';
+                document.getElementById('statusText').textContent = 'Loading staged changes...';
+                disableButtons();
+
+                vscode.postMessage({
+                    command: 'generate',
+                    instructions: instructions,
+                });
+            });
+
+            document.getElementById('insertBtn').addEventListener('click', () => {
+                const result = document.getElementById('resultArea').value;
+                vscode.postMessage({
+                    command: 'insertTerminal',
+                    message: result,
+                });
+            });
+
+            document.getElementById('commitBtn').addEventListener('click', () => {
+                const result = document.getElementById('resultArea').value;
+                vscode.postMessage({
+                    command: 'commit',
+                    message: result,
+                });
+            });
+
+            function enableButtons() {
+                document.getElementById('insertBtn').disabled = false;
+                document.getElementById('commitBtn').disabled = false;
+            }
+
+            function disableButtons() {
+                document.getElementById('insertBtn').disabled = true;
+                document.getElementById('commitBtn').disabled = true;
+            }
+
+            function showOllamaWarning(message) {
+                let warningBanner = document.getElementById('ollamaWarning');
+                if (!warningBanner) {
+                    warningBanner = document.createElement('div');
+                    warningBanner.id = 'ollamaWarning';
+                    warningBanner.className = 'warning-banner';
+                    warningBanner.innerHTML = `
+                        <div class="warning-content">
+                            <span class="warning-icon">⚠️</span>
+                            <div>
+                                <strong>Ollama Required</strong>
+                                <p>${message}</p>
+                                <p>Install Ollama from <a href="https://ollama.ai" class="warning-link">https://ollama.ai</a></p>
+                            </div>
+                        </div>
+                    `;
+                    document.body.insertBefore(warningBanner, document.body.firstChild);
+                } else {
+                    warningBanner.style.display = 'block';
+                }
+            }
+
+            // Handle messages from extension
+            window.addEventListener('message', (event) => {
+                const message = event.data;
+
+                switch (message.command) {
+                    case 'updateModel':
+                        document.getElementById('currentModel').textContent = message.model;
+                        break;
+
+                    case 'generatingStatus':
+                        document.getElementById('statusText').textContent = message.text;
+                        break;
+
+                    case 'streamChunk':
+                        const resultArea = document.getElementById('resultArea');
+                        if (message.isStart) {
+                            resultArea.value = '';
+                        }
+                        resultArea.value += message.chunk;
+                        break;
+
+                    case 'generateComplete':
+                        document.getElementById('resultArea').value = message.result;
+                        document.getElementById('statusText').textContent = '✓ Generated successfully';
+                        enableButtons();
+
+                        // Save to state
+                        const currentState = vscode.getState() || {};
+                        currentState.result = message.result;
+                        vscode.setState(currentState);
+                        break;
+
+                    case 'generateError':
+                        document.getElementById('resultArea').value = 'Error: ' + message.error;
+                        document.getElementById('statusText').textContent = '✗ Generation failed';
+                        disableButtons();
+
+                        // Show warning banner if Ollama is not installed
+                        if (message.error.includes('not installed') || message.error.includes('not running')) {
+                            showOllamaWarning(message.error);
+                        }
+                        break;
+
+                    case 'diffLoaded':
+                        document.getElementById('diffArea').value = message.diff;
+                        break;
+                }
+            });
+
+            // Request initial model
+            vscode.postMessage({ command: 'requestModel' });
+        </script>
+    </body>
+</html>
