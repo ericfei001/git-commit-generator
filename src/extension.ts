@@ -154,22 +154,22 @@ Generate commit message now:`;
             if (!workspaceFolders) throw new Error('No workspace');
 
             const diff = execSync('git diff --cached', { cwd: workspaceFolders[0].uri.fsPath, encoding: 'utf8' });
-            
+
             if (!diff.trim()) {
-                this._view?.webview.postMessage({ 
-                    command: 'diffLoaded', 
-                    diff: 'No staged changes found. Please stage your changes first.' 
+                this._view?.webview.postMessage({
+                    command: 'diffLoaded',
+                    diff: 'No staged changes found. Please stage your changes first.',
                 });
             } else {
-                this._view?.webview.postMessage({ 
-                    command: 'diffLoaded', 
-                    diff: diff 
+                this._view?.webview.postMessage({
+                    command: 'diffLoaded',
+                    diff: diff,
                 });
             }
         } catch (err: any) {
-            this._view?.webview.postMessage({ 
-                command: 'diffLoaded', 
-                diff: `Error: ${err.message}` 
+            this._view?.webview.postMessage({
+                command: 'diffLoaded',
+                diff: `Error: ${err.message}`,
             });
         }
     }
