@@ -1,9 +1,9 @@
 {
-    "name": "ai-commit-assistant",
-    "displayName": "AI Commit Assistant",
+    "name": "ollama-commit-assistant",
+    "displayName": "Ollama Commit Assistant",
     "description": "Generate commit messages using local Ollama models.",
     "version": "0.1.0",
-    "publisher": "eric",
+    "publisher": "ericfei001",
     "repository": {
         "type": "git",
         "url": "https://github.com/ericfei001/git-commit-generator.git"
