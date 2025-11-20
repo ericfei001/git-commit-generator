@@ -99,26 +99,26 @@ class CommitViewProvider implements vscode.WebviewViewProvider {
             this._view?.webview.postMessage({ command: 'generatingStatus', text: 'Generating...' });
             const model = vscode.workspace.getConfiguration('aiCommit').get<string>('defaultModel') || 'llama3.2';
 
-            let prompt = `You are a git commit message generator. Generate ONLY the commit message, nothing else.
+            let prompt = `You are a git command generator. Generate ONLY the complete git commit command, nothing else.
 
 STRICT OUTPUT RULES:
-1. NO explanations, NO "Alternatively", NO extra text
-2. NO markdown formatting, NO code blocks
-3. NO empty numbered lists
-4. Output the actual commit message directly
+1. Output ONLY the git commit command
+2. NO explanations, NO extra text before or after
+3. NO markdown, NO code blocks, NO quotes around the command
+4. Start directly with: git commit
 
-FORMAT RULES:
-- Single change: <type>(scope): description
-- Multiple changes: One line per change, no numbering
+COMMAND FORMAT:
+- Single change: git commit -m 'type(scope): description'
+- Multiple changes: git commit -m '1. change description' -m '2. another change' -m '3. more changes'
+- Use numbered list for multiple changes (1. 2. 3. etc.)
 - Types: feat, fix, refactor, chore, perf, ci, build, docs, style, test
-- Use imperative mood (Add, Fix, Update - not Added, Fixed, Updated)
-- No periods at end of lines
-- Keep under 72 characters per line
+- Use imperative mood (add, fix, update - not added, fixed, updated)
+- Use single quotes around each message
 
 ${instructions.trim() ? `CUSTOM INSTRUCTIONS: ${instructions}\n\n` : ''}Git diff:
 ${diff}
 
-Generate commit message now:`;
+Generate git commit command now:`;
 
             this._view?.webview.postMessage({ command: 'streamChunk', chunk: '', isStart: true });
             const result = await askOllama(prompt, model, (chunk) => {
@@ -134,14 +134,27 @@ Generate commit message now:`;
     private async handleInsertTerminal(message: string) {
         const terminal = vscode.window.createTerminal('Git Commit');
         terminal.show();
-        terminal.sendText(`git commit -m "${message.replace(/"/g, '\\"')}"`, false);
+        // If message already contains 'git commit', use it directly, otherwise wrap it
+        if (message.trim().startsWith('git commit')) {
+            terminal.sendText(message, false);
+        } else {
+            terminal.sendText(`git commit -m "${message.replace(/"/g, '\\"')}"`, false);
+        }
     }
 
     private async handleCommit(message: string) {
         try {
             const workspaceFolders = vscode.workspace.workspaceFolders;
             if (!workspaceFolders) throw new Error('No workspace');
-            execSync(`git commit -m "${message.replace(/"/g, '\\"')}"`, { cwd: workspaceFolders[0].uri.fsPath });
+            // If message already contains 'git commit', extract the arguments
+            let command: string;
+            if (message.trim().startsWith('git commit')) {
+                // Remove 'git commit' prefix and use the rest as command
+                command = message.trim();
+            } else {
+                command = `git commit -m "${message.replace(/"/g, '\\"')}"`;
+            }
+            execSync(command, { cwd: workspaceFolders[0].uri.fsPath });
             vscode.window.showInformationMessage('Committed!');
         } catch (err: any) {
             vscode.window.showErrorMessage(`Error: ${err.message}`);
